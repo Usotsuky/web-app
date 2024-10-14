@@ -11,7 +11,7 @@ class CreateUser(BaseModel):
     # model_config = ConfigDict(from_attributes=True)
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example":{
                 "username": "admin",
                 "email": "admin@gmail.com",
