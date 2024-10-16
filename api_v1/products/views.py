@@ -1,20 +1,34 @@
+import asyncio
+import logging
+
 from fastapi import Depends, status
 from fastapi import APIRouter
 from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi_cache.decorator import cache
 
-from core.db import db_helper
+from core.db import db_helper, Products
 from .schemas import ProductCreate, Product, ProductUpdate, ProductUpdatePartial
 from .crud import get_products, create_product, update_product, delete_product
 from .dependencies import get_product_by_id
 
-
+logger = logging.getLogger("fastapi_cache")
 router = APIRouter(tags=["Products"])
 
 
 @router.get("/", response_model=list[Product],)
+@cache(expire=10) # Will save data in cache 10 sec
 async def get_products_view(
     session: AsyncSession = Depends(db_helper.scoped_session_dependency),
 ):
+    # products = await redis.lrange("products", 0, -1)
+    # print(products)
+    # if not products:
+    #     products = await get_products(session=session)
+    #     print(products)
+    #     await redis.lpush(f"products:", *products)
+    # products = await get_products(session=session)
+    # print(type(products[0]))
+    # asyncio.sleep(3)
     return await get_products(session=session)
 
 
@@ -32,12 +46,14 @@ async def get_product_view(
 ):
     return product
 
+@cache(expire=60)
 @router.put("/{product_id}/", response_model=Product,)
 async def update_product_view(
         product_update: ProductUpdate,
-        product: Product = Depends(get_product_by_id),
+        product: Products = Depends(get_product_by_id),
         session: AsyncSession = Depends(db_helper.scoped_session_dependency),
-) -> Product:
+) -> Products:
+    logger.info("Data returned from the function (not cached)")
     return await update_product(
         session=session,
         product_in=product,
@@ -47,9 +63,9 @@ async def update_product_view(
 @router.patch("/{product_id}/", response_model=Product,)
 async def update_product_partial_view(
         product_update: ProductUpdatePartial,
-        product: Product = Depends(get_product_by_id),
+        product: Products = Depends(get_product_by_id),
         session: AsyncSession = Depends(db_helper.scoped_session_dependency),
-) -> Product:
+) -> Products:
     return await update_product(
         session=session,
         product_in=product,
@@ -59,7 +75,7 @@ async def update_product_partial_view(
 
 @router.delete("/{product_id}/", status_code=status.HTTP_204_NO_CONTENT,)
 async def delete_product_view(
-        product: Product = Depends(get_product_by_id),
+        product: Products = Depends(get_product_by_id),
         session: AsyncSession = Depends(db_helper.scoped_session_dependency),
 ):
     await delete_product(

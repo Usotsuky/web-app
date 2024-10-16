@@ -1,12 +1,16 @@
+import aioredis # async package for Redis
+import uvicorn
 from fastapi import FastAPI, Path
 from enum import Enum
 from typing import Annotated
-import uvicorn
+from fastapi_cache import FastAPICache # main class for caching data in FastAPI
+from fastapi_cache.backends.redis import RedisBackend # backend, will use Redis for caching data
 
 from core.config import settings
 from users.views import router as users_router
 from contextlib import asynccontextmanager
 from api_v1 import router as router_v1
+
 
 
 class ModelName(str, Enum):
@@ -16,13 +20,19 @@ class ModelName(str, Enum):
 
 
 @asynccontextmanager
-async def lifespan():
+async def lifespan(app: FastAPI):
     # async with db_helper.engine.begin() as conn:
     #     await conn.run_sync(Base.metadata.create_all)
+    # async with get_redis() as redis:
+    #     pass
+    redis = aioredis.from_url("redis://localhost", decode_responses=True, encoding="utf-8", )
+    print(await redis.get("nurik"))
+    FastAPICache.init(RedisBackend(redis), prefix=settings.fastapi_cache_prefix)
     yield
+    # await redis.close()
 
 
-app = FastAPI()
+app = FastAPI(lifespan=lifespan)
 app.include_router(router=router_v1, prefix=settings.api_v1_prefix)
 app.include_router(users_router)
 
