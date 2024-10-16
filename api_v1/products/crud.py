@@ -1,8 +1,10 @@
+import aioredis
+from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.engine import Result
 
-from .schemas import ProductCreate, ProductUpdate, ProductUpdatePartial
+from .schemas import ProductCreate, ProductUpdate, ProductUpdatePartial, Product
 from core.db import Products
 
 

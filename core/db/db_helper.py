@@ -32,6 +32,7 @@ class DatabaseHelper:
         yield session
         await session.close()
 
+
 db_helper = DatabaseHelper(
     settings.db_url,
     echo=True,
