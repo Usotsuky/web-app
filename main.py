@@ -31,14 +31,13 @@ async def lifespan(app: FastAPI):
         decode_responses=True,
         encoding="utf-8",
     )
-    print(await redis.get("nurik"))
-    FastAPICache.init(RedisBackend(redis), prefix=settings.fastapi_cache_prefix)
+    FastAPICache.init(RedisBackend(redis), prefix=settings.fastapi_cache_prefix,)
     yield
     # await redis.close()
 
 
 app = FastAPI(lifespan=lifespan)
-app.include_router(router=router_v1, prefix=settings.api_v1_prefix)
+app.include_router(router=router_v1, prefix=settings.api_v1_prefix,)
 app.include_router(users_router)
 
 
